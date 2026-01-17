@@ -1,0 +1,274 @@
+/* Admin Login Page */
+.admin-auth-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background particles */
+.admin-auth-container::before {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  top: -250px;
+  right: -250px;
+  animation: float 20s infinite ease-in-out;
+}
+
+.admin-auth-container::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(218, 165, 32, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  bottom: -200px;
+  left: -200px;
+  animation: float 15s infinite ease-in-out reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 30px) scale(1.1); }
+}
+
+/* Login Card */
+.admin-auth-card {
+  background: rgba(46, 46, 46, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+              0 0 1px rgba(255, 215, 0, 0.2);
+  width: 100%;
+  max-width: 450px;
+  padding: 2.5rem;
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header Section */
+.admin-auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.admin-auth-icon {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 8px 32px rgba(255, 215, 0, 0.5); }
+}
+
+.admin-auth-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.admin-auth-subtitle {
+  color: #aaa;
+  font-size: 0.95rem;
+}
+
+/* Form */
+.admin-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-input-group {
+  position: relative;
+}
+
+.admin-input-label {
+  display: block;
+  color: #ccc;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.admin-input-wrapper {
+  position: relative;
+}
+
+.admin-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  padding-right: 3rem;
+  background: rgba(55, 55, 55, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: #FFD700;
+  background: rgba(55, 55, 55, 1);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+}
+
+.admin-input::placeholder {
+  color: #777;
+}
+
+.admin-toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.admin-toggle-password:hover {
+  color: #FFD700;
+}
+
+/* Error Message */
+.admin-error {
+  background: rgba(220, 53, 69, 0.2);
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  padding: 0.875rem;
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.admin-error-text {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Submit Button */
+.admin-submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.admin-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255, 215, 0, 0.4);
+}
+
+.admin-submit-btn:hover::before {
+  left: 100%;
+}
+
+.admin-submit-btn:active {
+  transform: translateY(0);
+}
+
+.admin-submit-btn:disabled {
+  background: linear-gradient(135deg, #666, #555);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Footer */
+.admin-auth-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.admin-warning-text {
+  font-size: 0.75rem;
+  color: #777;
+  margin: 0;
+}
+
+/* Responsive - Mobile First */
+@media (max-width: 480px) {
+  .admin-auth-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .admin-auth-title {
+    font-size: 1.5rem;
+  }
+  
+  .admin-auth-icon {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .admin-auth-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+}

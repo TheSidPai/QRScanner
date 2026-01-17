@@ -1,15 +1,24 @@
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AdminAuth from './pages/AdminAuth';
+import QRScannerMain from './pages/QRScannerMain';
+import ProtectedRoute from './ProtectedRoute';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>QR Scanner</h1>
-        <p>
-          Building a QR Code scanner for the Parsec 6.0 event and passes handling.
-        </p>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<AdminAuth />} />
+        <Route 
+          path="/admin/qr" 
+          element={
+            <ProtectedRoute>
+              <QRScannerMain />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
+    </Router>
   );
 }
 
