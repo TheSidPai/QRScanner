@@ -335,7 +335,7 @@
   display: block !important;
   width: 100% !important;
   height: 100% !important;
-  object-fit: contain !important; /* Changed from cover to contain */
+  object-fit: cover !important; /* Changed from cover to contain */
 }
 
 .qr-reader-wrapper section {
@@ -349,4 +349,93 @@
   left: 0 !important;
   width: 100% !important;
   height: 100% !important;
+}
+
+/* QR Status Message */
+.qr-status-message {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.status-used {
+  background: rgba(220, 53, 69, 0.15);
+  border: 2px solid #dc3545;
+  color: #ff6b6b;
+}
+
+.status-valid {
+  background: rgba(40, 167, 69, 0.15);
+  border: 2px solid #28a745;
+  color: #5dff8a;
+}
+
+.status-loading {
+  color: #FFD700;
+}
+
+/* Verify QR Button */
+.verify-qr-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 1rem 0;
+  font-size: 1.05rem;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.verify-qr-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #20c997, #28a745);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+}
+
+.verify-qr-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Verification Message */
+.verify-message {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.verify-message.success {
+  background: rgba(40, 167, 69, 0.15);
+  border: 2px solid #28a745;
+  color: #5dff8a;
+}
+
+.verify-message.error {
+  background: rgba(220, 53, 69, 0.15);
+  border: 2px solid #dc3545;
+  color: #ff6b6b;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .qr-status-message,
+  .verify-message {
+    font-size: 0.9rem;
+    padding: 0.875rem;
+  }
+  
+  .verify-qr-btn {
+    font-size: 0.95rem;
+    padding: 0.75rem 1.25rem;
+  }
 }
