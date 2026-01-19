@@ -14,7 +14,7 @@ function QRScannerMain() {
   const [verifyMessage, setVerifyMessage] = useState(null);
 
   // Unique key to force QrReader remount - this is the KEY fix
-  const [scannerKey, setScannerKey] = useState(0);
+  //   const [scannerKey, setScannerKey] = useState(0);
 
   // Track if scanning is allowed (prevents race conditions)
   const scanningAllowed = useRef(false);
@@ -30,6 +30,7 @@ function QRScannerMain() {
   };
 
   // Check QR status when scanResult changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (scanResult && !scanResult.error) {
       const qrDataToSend = scanResult.qrCodeData || scanResult;
@@ -47,6 +48,7 @@ function QRScannerMain() {
 
       checkQRStatus(qrDataToSend);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanResult]);
 
   const checkQRStatus = async (qrCodeData) => {
@@ -279,9 +281,7 @@ function QRScannerMain() {
             <div className="qr-modal-content">
               <div className="qr-reader-wrapper">
                 {!scanningAllowed.current && (
-                  <div
-                    
-                  >
+                  <div>
                     {/* 📷 Initializing camera...
                     <br />
                     <small style={{ fontSize: "0.8rem", color: "#FFA500" }}>
@@ -290,12 +290,12 @@ function QRScannerMain() {
                   </div>
                 )}
                 <QrReader
-                  key={scannerKey}
+                  //   key={scannerKey}
                   constraints={{
                     facingMode: "environment",
                   }}
                   onResult={handleScanResult}
-                  videoId={`video-${scannerKey}`}
+                  //   videoId={`video-${scannerKey}`}
                   scanDelay={300}
                   videoStyle={{
                     width: "100%",
