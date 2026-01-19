@@ -47,7 +47,7 @@ function AdminAuth() {
         setAdminKey('');
       }
     } catch (error) {
-      console.error('Authentication error:', error);
+    //   console.error('Authentication error:', error);
       setError('Network error: Unable to connect to server. Please try again.');
       setAdminKey('');
     } finally {

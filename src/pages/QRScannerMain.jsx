@@ -48,57 +48,75 @@ function QRScannerMain() {
   }, [scanResult]);
 
   const checkQRStatus = async (qrCodeData) => {
-    console.log("🔍 Checking QR status...", qrCodeData);
-    setQrStatus({ loading: true, isUsed: null, message: null });
+  console.log("🔍 Checking QR status...", qrCodeData);
+  setQrStatus({ loading: true, isUsed: null, message: null });
 
-    try {
-      const qrDataString = JSON.stringify(qrCodeData);
-      console.log("📤 Sending QR data to /paneermoms/qr/get:", qrDataString);
+  try {
+    const qrDataString = JSON.stringify(qrCodeData);
+    console.log("📤 Sending QR data to /paneermoms/qr/get:", qrDataString);
 
-      const response = await fetch(buildApiUrl("/paneermoms/qr/get"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${adminToken}`,
-        },
-        body: JSON.stringify({ qrData: qrDataString }),
-      });
+    const response = await fetch(buildApiUrl("/paneermoms/qr/get"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ qrData: qrDataString }),
+    });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("📥 QR status response:", data);
-
-      if (data.status === "success") {
-        const isUsed = data.data.isUsed;
-        setQrStatus({
-          loading: false,
-          isUsed: isUsed,
-          message: isUsed
-            ? "⚠️ This QR code has already been used!"
-            : "✅ QR code is valid and ready to verify",
-        });
-        console.log(`✅ QR Status: isUsed = ${isUsed}`);
-      } else {
-        setQrStatus({
-          loading: false,
-          isUsed: null,
-          message: `❌ ${data.message || "Failed to check QR status"}`,
-        });
-        console.error("❌ Failed to get QR status:", data);
-      }
-    } catch (error) {
-      console.error("💥 Error checking QR status:", error);
+    if (response.status === 401) {
       setQrStatus({
         loading: false,
         isUsed: null,
-        message:
-          "❌ Network error. Please check your connection and try again.",
+        message: "🔒 The admin session has expired. Please login again.",
       });
+      return;
     }
-  };
+
+    if (response.status === 404) {
+      setQrStatus({
+        loading: false,
+        isUsed: null,
+        message: "❌ Invalid QR.",
+      });
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("📥 QR status response:", data);
+
+    if (data.status === "success") {
+      const isUsed = data.data.isUsed;
+      setQrStatus({
+        loading: false,
+        isUsed: isUsed,
+        message: isUsed
+          ? "⚠️ This QR code has already been used!"
+          : "✅ QR code is valid and ready to be used",
+      });
+      console.log(`✅ QR Status: isUsed = ${isUsed}`);
+    } else {
+      setQrStatus({
+        loading: false,
+        isUsed: null,
+        message: `❌ ${data.message || "Failed to check QR status"}`,
+      });
+      console.error("❌ Failed to get QR status:", data);
+    }
+  } catch (error) {
+    console.error("💥 Error checking QR status:", error);
+    setQrStatus({
+      loading: false,
+      isUsed: null,
+      message:
+        "❌ Network error. Please check your connection and try again.",
+    });
+  }
+};
 
   const handleVerifyQR = async () => {
     if (!scanResult) {
@@ -342,7 +360,7 @@ function QRScannerMain() {
                       onClick={handleVerifyQR}
                       disabled={verifying}
                     >
-                      {verifying ? "🔄 Verifying..." : "🔐 Verify QR"}
+                      {verifying ? "🔄 Verifying..." : "🔐 Verify QR - Mark as Used"}
                     </button>
                   )}
 
