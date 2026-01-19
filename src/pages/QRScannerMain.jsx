@@ -13,9 +13,6 @@ function QRScannerMain() {
   const [verifying, setVerifying] = useState(false);
   const [verifyMessage, setVerifyMessage] = useState(null);
 
-  // Unique key to force QrReader remount - this is the KEY fix
-  //   const [scannerKey, setScannerKey] = useState(0);
-
   // Track if scanning is allowed (prevents race conditions)
   const scanningAllowed = useRef(false);
 
@@ -30,7 +27,6 @@ function QRScannerMain() {
   };
 
   // Check QR status when scanResult changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (scanResult && !scanResult.error) {
       const qrDataToSend = scanResult.qrCodeData || scanResult;
@@ -165,28 +161,6 @@ function QRScannerMain() {
     }
   };
 
-  //   const handleScanAnother = () => {
-  //     console.log("🔄 Resetting scanner for new scan");
-
-  //     // CRITICAL: First disable scanning to prevent any callbacks
-  //     scanningAllowed.current = false;
-
-  //     // First, close the scanner completely to ensure cleanup
-  //     setScanning(false);
-
-  //     // Then reset all states in the next tick to ensure clean state
-  //     setTimeout(() => {
-  //       setScanResult(null);
-  //       setQrStatus(null);
-  //       setVerifyMessage(null);
-
-  //       // Increment the scanner key to force complete remount of QrReader
-  //       setScannerKey(prev => prev + 1);
-
-  //       console.log("✅ Scanner reset complete - ready for new scan");
-  //     }, 50); // Small delay to ensure camera is fully released
-  //   };
-
   const handleScanAnother = () => {
     console.log("🔄 Hard refresh (Ctrl+F5 equivalent) - preserving session...");
 
@@ -210,7 +184,7 @@ function QRScannerMain() {
   };
 
   // Handler for QR scan result - wrapped in useCallback for stability
-  const handleScanResult = useCallback((result, error) => {
+  const handleScanResult = useCallback((result) => {
     // CRITICAL: Check if scanning is allowed using ref (synchronous check)
     if (!scanningAllowed.current) {
       console.log("🚫 Scan ignored - scanning not allowed");
@@ -280,22 +254,12 @@ function QRScannerMain() {
           <div className="qr-modal">
             <div className="qr-modal-content">
               <div className="qr-reader-wrapper">
-                {!scanningAllowed.current && (
-                  <div>
-                    {/* 📷 Initializing camera...
-                    <br />
-                    <small style={{ fontSize: "0.8rem", color: "#FFA500" }}>
-                      Please wait
-                    </small> */}
-                  </div>
-                )}
                 <QrReader
-                  //   key={scannerKey}
                   constraints={{
                     facingMode: "environment",
                   }}
                   onResult={handleScanResult}
-                  //   videoId={`video-${scannerKey}`}
+                  videoId="video"
                   scanDelay={300}
                   videoStyle={{
                     width: "100%",
