@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { RiLogoutBoxLine, RiQrScan2Line } from "@remixicon/react";
+import {
+  RiLogoutBoxLine,
+  RiQrScan2Line,
+  RiMailSendLine,
+} from "@remixicon/react";
 import { QrReader } from "react-qr-reader";
 import { API_ENDPOINTS, buildApiUrl } from "../config/api";
 import "./QRScannerMain.css";
@@ -12,6 +16,12 @@ function QRScannerMain() {
   const [qrStatus, setQrStatus] = useState(null);
   const [verifying, setVerifying] = useState(false);
   const [verifyMessage, setVerifyMessage] = useState(null);
+
+  // Send Pass Modal State
+  const [showSendPassModal, setShowSendPassModal] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [sendingPass, setSendingPass] = useState(false);
+  const [sendPassMessage, setSendPassMessage] = useState(null);
 
   // Track if scanning is allowed (prevents race conditions)
   const scanningAllowed = useRef(false);
@@ -48,75 +58,79 @@ function QRScannerMain() {
   }, [scanResult]);
 
   const checkQRStatus = async (qrCodeData) => {
-  console.log("🔍 Checking QR status...", qrCodeData);
-  setQrStatus({ loading: true, isUsed: null, message: null });
+    console.log("🔍 Checking QR status...", qrCodeData);
+    setQrStatus({ loading: true, isUsed: null, message: null });
 
-  try {
-    const qrDataString = JSON.stringify(qrCodeData);
-    console.log("📤 Sending QR data to /paneermoms/qr/get:", qrDataString);
+    try {
+      const qrDataString = JSON.stringify(qrCodeData);
+      console.log("📤 Sending QR data to /paneermoms/qr/get:", qrDataString);
 
-    const response = await fetch(buildApiUrl("/paneermoms/qr/get"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${adminToken}`,
-      },
-      body: JSON.stringify({ qrData: qrDataString }),
-    });
+      const response = await fetch(buildApiUrl("/paneermoms/qr/get"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ qrData: qrDataString }),
+      });
 
-    if (response.status === 401) {
+      if (response.status === 401) {
+        setQrStatus({
+          loading: false,
+          isUsed: null,
+          message: "🔒 The admin session has expired. Redirecting to login...",
+        });
+        setTimeout(() => {
+          sessionStorage.clear();
+          navigate("/");
+        }, 1800);
+        return;
+      }
+
+      if (response.status === 404) {
+        setQrStatus({
+          loading: false,
+          isUsed: null,
+          message: "❌ Invalid QR.",
+        });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("📥 QR status response:", data);
+
+      if (data.status === "success") {
+        const isUsed = data.data.isUsed;
+        setQrStatus({
+          loading: false,
+          isUsed: isUsed,
+          message: isUsed
+            ? "⚠️ This QR code has already been used!"
+            : "✅ QR code is valid and ready to be used",
+        });
+        console.log(`✅ QR Status: isUsed = ${isUsed}`);
+      } else {
+        setQrStatus({
+          loading: false,
+          isUsed: null,
+          message: `❌ ${data.message || "Failed to check QR status"}`,
+        });
+        console.error("❌ Failed to get QR status:", data);
+      }
+    } catch (error) {
+      console.error("💥 Error checking QR status:", error);
       setQrStatus({
         loading: false,
         isUsed: null,
-        message: "🔒 The admin session has expired. Please login again.",
+        message:
+          "❌ Network error. Please check your connection and try again.",
       });
-      return;
     }
-
-    if (response.status === 404) {
-      setQrStatus({
-        loading: false,
-        isUsed: null,
-        message: "❌ Invalid QR.",
-      });
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("📥 QR status response:", data);
-
-    if (data.status === "success") {
-      const isUsed = data.data.isUsed;
-      setQrStatus({
-        loading: false,
-        isUsed: isUsed,
-        message: isUsed
-          ? "⚠️ This QR code has already been used!"
-          : "✅ QR code is valid and ready to be used",
-      });
-      console.log(`✅ QR Status: isUsed = ${isUsed}`);
-    } else {
-      setQrStatus({
-        loading: false,
-        isUsed: null,
-        message: `❌ ${data.message || "Failed to check QR status"}`,
-      });
-      console.error("❌ Failed to get QR status:", data);
-    }
-  } catch (error) {
-    console.error("💥 Error checking QR status:", error);
-    setQrStatus({
-      loading: false,
-      isUsed: null,
-      message:
-        "❌ Network error. Please check your connection and try again.",
-    });
-  }
-};
+  };
 
   const handleVerifyQR = async () => {
     if (!scanResult) {
@@ -181,49 +195,169 @@ function QRScannerMain() {
 
   const handleScanAnother = () => {
     console.log("🔄 Hard refresh (Ctrl+F5 equivalent) - preserving session...");
-
-    // Add cache-busting timestamp to force fresh load
-    // This keeps sessionStorage intact
     const currentUrl = window.location.href.split("?")[0];
     window.location.href = currentUrl + "?t=" + new Date().getTime();
   };
 
   const handleStartScanning = () => {
     console.log("📷 Starting camera for QR scan...");
-
-    // Enable scanning AFTER a longer delay to ensure camera is ready
-    // This prevents immediate re-scanning of the same QR code
     setTimeout(() => {
       scanningAllowed.current = true;
       console.log("✅ Scanning enabled - ready for new scan");
-    }, 1000); // Increased to 1 second
-
+    }, 1000);
     setScanning(true);
   };
 
-  // Handler for QR scan result - wrapped in useCallback for stability
-  const handleScanResult = useCallback((result) => {
-    // CRITICAL: Check if scanning is allowed using ref (synchronous check)
-    if (!scanningAllowed.current) {
-      console.log("🚫 Scan ignored - scanning not allowed");
-      return; // Ignore all callbacks when scanning is not allowed
+  // Send Pass Functions
+  const handleOpenSendPassModal = () => {
+    setShowSendPassModal(true);
+    setEmailInput("");
+    setSendPassMessage(null);
+  };
+
+  const handleCloseSendPassModal = () => {
+    setShowSendPassModal(false);
+    setEmailInput("");
+    setSendPassMessage(null);
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSendPass = async () => {
+    console.log("📧 Sending pass to email:", emailInput);
+
+    // Validate email
+    if (!emailInput.trim()) {
+      setSendPassMessage({
+        type: "error",
+        text: "❌ Please enter an email address",
+      });
+      return;
     }
 
-    // Additional check: ignore if result is null or undefined
+    if (!validateEmail(emailInput)) {
+      setSendPassMessage({
+        type: "error",
+        text: "❌ Please enter a valid email address",
+      });
+      return;
+    }
+
+    setSendingPass(true);
+    setSendPassMessage(null);
+
+    try {
+      console.log("📤 Sending request to /paneermoms/give-pass");
+
+      const response = await fetch(buildApiUrl("/paneermoms/give-pass"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ email: emailInput.trim() }),
+      });
+
+      // Handle 401 Unauthorized
+      if (response.status === 401) {
+        setSendPassMessage({
+          type: "error",
+          text: "🔒 The admin session has expired. Redirecting to login...",
+        });
+        setSendingPass(false);
+        setTimeout(() => {
+          sessionStorage.clear();
+          navigate("/");
+        }, 1800);
+        return;
+      }
+
+      // Handle 400 Bad Request
+      if (response.status === 400) {
+        const data = await response.json();
+        setSendPassMessage({
+          type: "error",
+          text: `❌ ${data.message || "Bad request. Please check the email."}`,
+        });
+        setSendingPass(false);
+        return;
+      }
+
+      // Handle 404 Not Found
+      if (response.status === 404) {
+        const data = await response.json();
+        setSendPassMessage({
+          type: "error",
+          text: `❌ ${data.message || "User not found."}`,
+        });
+        setSendingPass(false);
+        return;
+      }
+
+      // Handle other errors
+      if (!response.ok) {
+        setSendPassMessage({
+          type: "error",
+          text: `❌ Unexpected error (${response.status}). Please try again.`,
+        });
+        setSendingPass(false);
+        return;
+      }
+
+      // Success (201 or status: "success")
+      const data = await response.json();
+      if (response.status === 201 || data.status === "success") {
+        setSendPassMessage({
+          type: "success",
+          text: `✅ Free pass issued successfully to ${emailInput}`,
+        });
+        console.log("✅ Pass sent successfully");
+        console.log("📋 Order ID:", data.data?.orderIdShort);
+
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          handleCloseSendPassModal();
+        }, 2000);
+      } else {
+        // Fallback for any other error
+        setSendPassMessage({
+          type: "error",
+          text: data.message || "❌ Failed to send pass",
+        });
+        console.error("❌ Send pass failed:", data.message);
+      }
+    } catch (error) {
+      console.error("💥 Error sending pass:", error);
+      setSendPassMessage({
+        type: "error",
+        text: "❌ Network error. Please try again.",
+      });
+    } finally {
+      setSendingPass(false);
+    }
+  };
+
+  // Handler for QR scan result
+  const handleScanResult = useCallback((result) => {
+    if (!scanningAllowed.current) {
+      console.log("🚫 Scan ignored - scanning not allowed");
+      return;
+    }
+
     if (!result) {
       return;
     }
 
-    // Immediately disable further scans
     scanningAllowed.current = false;
-
     console.log("📸 QR detected, processing...");
 
     try {
       const parsed = JSON.parse(result.getText());
       console.log("📱 QR Scanned successfully:", parsed);
 
-      // Basic validation
       if (!parsed || typeof parsed !== "object") {
         console.error("❌ Invalid QR: Not a valid JSON object");
         setScanResult({ error: "Invalid QR code format." });
@@ -259,15 +393,22 @@ function QRScannerMain() {
       </header>
 
       <main className="qr-main-content">
-        {/* Only show Scan QR button when not scanning AND no result */}
+        {/* Main Buttons - Only show when not scanning AND no result */}
         {!scanning && !scanResult && (
-          <button className="scan-qr-btn" onClick={handleStartScanning}>
-            <RiQrScan2Line size={24} style={{ marginRight: 8 }} />
-            Scan QR
-          </button>
+          <div className="main-actions">
+            <button className="scan-qr-btn" onClick={handleStartScanning}>
+              <RiQrScan2Line size={24} style={{ marginRight: 8 }} />
+              Scan QR
+            </button>
+
+            <button className="send-pass-btn" onClick={handleOpenSendPassModal}>
+              <RiMailSendLine size={24} style={{ marginRight: 8 }} />
+              Send Pass
+            </button>
+          </div>
         )}
 
-        {/* Only show scanner when scanning is true AND no result yet */}
+        {/* QR Scanner Modal */}
         {scanning && !scanResult && (
           <div className="qr-modal">
             <div className="qr-modal-content">
@@ -305,7 +446,56 @@ function QRScannerMain() {
           </div>
         )}
 
-        {/* Show results when we have scanResult */}
+        {/* Send Pass Modal */}
+        {showSendPassModal && (
+          <div className="qr-modal">
+            <div className="send-pass-modal-content">
+              <h2 className="modal-title">📧 Send Pass to Email</h2>
+              <p className="modal-subtitle">
+                Enter the recipient's email address
+              </p>
+
+              <input
+                type="email"
+                className="email-input"
+                placeholder="example@email.com"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && !sendingPass) {
+                    handleSendPass();
+                  }
+                }}
+                disabled={sendingPass}
+              />
+
+              {sendPassMessage && (
+                <div className={`send-pass-message ${sendPassMessage.type}`}>
+                  {sendPassMessage.text}
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button
+                  className="send-email-btn"
+                  onClick={handleSendPass}
+                  disabled={sendingPass}
+                >
+                  {sendingPass ? "📤 Sending..." : "📨 Send Pass"}
+                </button>
+                <button
+                  className="cancel-modal-btn"
+                  onClick={handleCloseSendPassModal}
+                  disabled={sendingPass}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Scan Results */}
         {scanResult && (
           <div className="scan-result-card">
             <h2 className="scan-result-title">Scan Result</h2>
@@ -360,7 +550,9 @@ function QRScannerMain() {
                       onClick={handleVerifyQR}
                       disabled={verifying}
                     >
-                      {verifying ? "🔄 Verifying..." : "🔐 Verify QR - Mark as Used"}
+                      {verifying
+                        ? "🔄 Verifying..."
+                        : "🔐 Verify QR - Mark as Used"}
                     </button>
                   )}
 
