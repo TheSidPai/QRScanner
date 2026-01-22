@@ -8,6 +8,7 @@ import {
 import { QrReader } from "react-qr-reader";
 import { API_ENDPOINTS, buildApiUrl } from "../config/api";
 import "./QRScannerMain.css";
+import logger from "../utils/logger";
 
 function QRScannerMain() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ function QRScannerMain() {
   const adminToken = sessionStorage.getItem("admin_token");
 
   const handleLogout = () => {
-    console.log("🚪 Logging out admin...");
+    logger.log("🚪 Logging out admin...");
     sessionStorage.clear();
     navigate("/");
   };
@@ -43,7 +44,7 @@ function QRScannerMain() {
 
       // Validate that we have the required fields
       if (!qrDataToSend.orderId || !qrDataToSend.attendeeName) {
-        console.error("❌ Invalid QR data structure:", qrDataToSend);
+        logger.error("❌ Invalid QR data structure:", qrDataToSend);
         setQrStatus({
           loading: false,
           isUsed: null,
@@ -58,12 +59,12 @@ function QRScannerMain() {
   }, [scanResult]);
 
   const checkQRStatus = async (qrCodeData) => {
-    console.log("🔍 Checking QR status...", qrCodeData);
+    logger.log("🔍 Checking QR status...", qrCodeData);
     setQrStatus({ loading: true, isUsed: null, message: null });
 
     try {
       const qrDataString = JSON.stringify(qrCodeData);
-      console.log("📤 Sending QR data to /paneermoms/qr/get:", qrDataString);
+      // logger.log("📤 Sending QR data to /paneermoms/qr/get:", qrDataString);
 
       const response = await fetch(buildApiUrl("/paneermoms/qr/get"), {
         method: "POST",
@@ -101,7 +102,7 @@ function QRScannerMain() {
       }
 
       const data = await response.json();
-      console.log("📥 QR status response:", data);
+      logger.log("📥 QR status response:", data);
 
       if (data.status === "success") {
         const isUsed = data.data.isUsed;
@@ -112,17 +113,17 @@ function QRScannerMain() {
             ? "⚠️ This QR code has already been used!"
             : "✅ QR code is valid and ready to be used",
         });
-        console.log(`✅ QR Status: isUsed = ${isUsed}`);
+        logger.log(`✅ QR Status: isUsed = ${isUsed}`);
       } else {
         setQrStatus({
           loading: false,
           isUsed: null,
           message: `❌ ${data.message || "Failed to check QR status"}`,
         });
-        console.error("❌ Failed to get QR status:", data);
+        logger.error("❌ Failed to get QR status:", data);
       }
     } catch (error) {
-      console.error("💥 Error checking QR status:", error);
+      logger.error("💥 Error checking QR status:", error);
       setQrStatus({
         loading: false,
         isUsed: null,
@@ -134,18 +135,18 @@ function QRScannerMain() {
 
   const handleVerifyQR = async () => {
     if (!scanResult) {
-      console.error("❌ No QR data to verify");
+      logger.error("❌ No QR data to verify");
       return;
     }
 
     const qrDataToSend = scanResult.qrCodeData || scanResult;
-    console.log("🔐 Verifying QR code...", qrDataToSend);
+    logger.log("🔐 Verifying QR code...", qrDataToSend);
     setVerifying(true);
     setVerifyMessage(null);
 
     try {
       const qrDataString = JSON.stringify(qrDataToSend);
-      console.log("📤 Sending QR data to /paneermoms/qr/verify:", qrDataString);
+      // logger.log("📤 Sending QR data to /paneermoms/qr/verify:", qrDataString);
 
       const response = await fetch(buildApiUrl(API_ENDPOINTS.ADMIN_QR_VERIFY), {
         method: "POST",
@@ -161,7 +162,7 @@ function QRScannerMain() {
       }
 
       const data = await response.json();
-      console.log("📥 Verification response:", data);
+      logger.log("📥 Verification response:", data);
 
       if (data.status === "success") {
         setVerifyMessage({
@@ -174,16 +175,16 @@ function QRScannerMain() {
           isUsed: true,
           message: "✅ QR code has been marked as used",
         });
-        console.log("✅ QR verified successfully");
+        logger.log("✅ QR verified successfully");
       } else {
         setVerifyMessage({
           type: "error",
           text: data.message || "❌ QR code has already been used",
         });
-        console.error("❌ Verification failed:", data.message);
+        logger.error("❌ Verification failed:", data.message);
       }
     } catch (error) {
-      console.error("💥 Error verifying QR:", error);
+      logger.error("💥 Error verifying QR:", error);
       setVerifyMessage({
         type: "error",
         text: "❌ Network error. Please try again.",
@@ -194,16 +195,16 @@ function QRScannerMain() {
   };
 
   const handleScanAnother = () => {
-    console.log("🔄 Hard refresh (Ctrl+F5 equivalent) - preserving session...");
+    logger.log("🔄 Hard refresh (Ctrl+F5 equivalent) - preserving session...");
     const currentUrl = window.location.href.split("?")[0];
     window.location.href = currentUrl + "?t=" + new Date().getTime();
   };
 
   const handleStartScanning = () => {
-    console.log("📷 Starting camera for QR scan...");
+    logger.log("📷 Starting camera for QR scan...");
     setTimeout(() => {
       scanningAllowed.current = true;
-      console.log("✅ Scanning enabled - ready for new scan");
+      logger.log("✅ Scanning enabled - ready for new scan");
     }, 1000);
     setScanning(true);
   };
@@ -227,7 +228,7 @@ function QRScannerMain() {
   };
 
   const handleSendPass = async () => {
-    console.log("📧 Sending pass to email:", emailInput);
+    logger.log("📧 Sending pass to email:", emailInput);
 
     // Validate email
     if (!emailInput.trim()) {
@@ -250,7 +251,7 @@ function QRScannerMain() {
     setSendPassMessage(null);
 
     try {
-      console.log("📤 Sending request to /paneermoms/give-pass");
+      // logger.log("📤 Sending request to /paneermoms/give-pass");
 
       const response = await fetch(buildApiUrl("/paneermoms/give-pass"), {
         method: "POST",
@@ -314,8 +315,8 @@ function QRScannerMain() {
           type: "success",
           text: `✅ Free pass issued successfully to ${emailInput}`,
         });
-        console.log("✅ Pass sent successfully");
-        console.log("📋 Order ID:", data.data?.orderIdShort);
+        logger.log("✅ Pass sent successfully");
+        logger.log("📋 Order ID:", data.data?.orderIdShort);
 
         // Close modal after 2 seconds
         setTimeout(() => {
@@ -327,10 +328,10 @@ function QRScannerMain() {
           type: "error",
           text: data.message || "❌ Failed to send pass",
         });
-        console.error("❌ Send pass failed:", data.message);
+        logger.error("❌ Send pass failed:", data.message);
       }
     } catch (error) {
-      console.error("💥 Error sending pass:", error);
+      logger.error("💥 Error sending pass:", error);
       setSendPassMessage({
         type: "error",
         text: "❌ Network error. Please try again.",
@@ -343,7 +344,7 @@ function QRScannerMain() {
   // Handler for QR scan result
   const handleScanResult = useCallback((result) => {
     if (!scanningAllowed.current) {
-      console.log("🚫 Scan ignored - scanning not allowed");
+      logger.log("🚫 Scan ignored - scanning not allowed");
       return;
     }
 
@@ -352,14 +353,14 @@ function QRScannerMain() {
     }
 
     scanningAllowed.current = false;
-    console.log("📸 QR detected, processing...");
+    logger.log("📸 QR detected, processing...");
 
     try {
       const parsed = JSON.parse(result.getText());
-      console.log("📱 QR Scanned successfully:", parsed);
+      logger.log("📱 QR Scanned successfully:", parsed);
 
       if (!parsed || typeof parsed !== "object") {
-        console.error("❌ Invalid QR: Not a valid JSON object");
+        logger.error("❌ Invalid QR: Not a valid JSON object");
         setScanResult({ error: "Invalid QR code format." });
         setScanning(false);
         return;
@@ -368,7 +369,7 @@ function QRScannerMain() {
       setScanResult(parsed);
       setScanning(false);
     } catch (err) {
-      console.error("❌ Invalid QR format - JSON parse error:", err);
+      logger.error("❌ Invalid QR format - JSON parse error:", err);
       setScanResult({ error: "Invalid QR code format. Unable to parse data." });
       setScanning(false);
     }
@@ -435,7 +436,7 @@ function QRScannerMain() {
               <button
                 className="close-modal-btn"
                 onClick={() => {
-                  console.log("❌ Scan cancelled");
+                  logger.log("❌ Scan cancelled");
                   scanningAllowed.current = false;
                   setScanning(false);
                 }}

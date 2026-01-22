@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { RiLockLine, RiEyeLine, RiEyeOffLine } from '@remixicon/react';
 import { API_ENDPOINTS, buildApiUrl } from '../config/api';
 import './AdminAuth.css';
+import logger from "../utils/logger";
 
 function AdminAuth() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ function AdminAuth() {
         setAdminKey('');
       }
     } catch (error) {
-    //   console.error('Authentication error:', error);
+      logger.error('Authentication error:', error);
       setError('Network error: Unable to connect to server. Please try again.');
       setAdminKey('');
     } finally {
